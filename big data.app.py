@@ -1,166 +1,168 @@
 import streamlit as st
 import pandas as pd
 
-# =====================
-# CONFIG
-# =====================
+# ==========================
+# KONFIGURASI HALAMAN
+# ==========================
 st.set_page_config(
-    page_title="Indonesia Internet School Dashboard",
+    page_title="Dashboard Akses Internet Sekolah",
     page_icon="🌐",
     layout="wide"
 )
 
-# =====================
+# ==========================
 # LOAD DATA
-# =====================
+# ==========================
 file_id = "1lIzy0UBFPth_csvflUUYpdv5zpr7fUmc"
 url = f"https://drive.google.com/uc?id={file_id}"
 
 df = pd.read_csv(url)
-df.columns = df.columns.str.strip()
 
-# =====================
+# Bersihkan nama kolom
+df.columns = df.columns.astype(str).str.strip()
+
+# Bersihkan data teks
+for col in df.columns:
+    if df[col].dtype == "object":
+        df[col] = df[col].astype(str).str.strip()
+
+# Ubah kolom angka
+angka = [
+    "Negeri_Internet",
+    "Swasta_Internet",
+    "Total_Internet",
+    "Negeri_Sekolah",
+    "Swasta_Sekolah",
+    "Total_Sekolah",
+    "Diff_Negeri",
+    "Diff_Swasta",
+    "Diff_Total"
+]
+
+for col in angka:
+    if col in df.columns:
+        df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+
+# ==========================
 # HEADER
-# =====================
+# ==========================
 st.title("🌐 Indonesia School Internet Dashboard")
 st.caption("Monitoring Akses Internet Sekolah Indonesia Tahun 2024")
 
 st.markdown("---")
 
-# =====================
-# SIDEBAR
-# =====================
-st.sidebar.image(
-    "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
-    width=100
-)
+# ==========================
+# FILTER
+# ==========================
+col1, col2 = st.columns(2)
 
-st.sidebar.title("Filter Data")
+with col1:
+    pilihan_provinsi = st.selectbox(
+        "📍 Pilih Provinsi",
+        ["Semua"] + sorted(df["Provinsi"].dropna().unique().tolist())
+    )
 
-provinsi = st.sidebar.selectbox(
-    "Provinsi",
-    ["Semua"] + sorted(df["Provinsi"].unique())
-)
-
-pendidikan = st.sidebar.selectbox(
-    "Jenjang",
-    ["Semua"] + sorted(df["Pendidikan"].unique())
-)
+with col2:
+    pilihan_pendidikan = st.selectbox(
+        "🎓 Pilih Jenjang",
+        ["Semua"] + sorted(df["Pendidikan"].dropna().unique().tolist())
+    )
 
 filtered = df.copy()
 
-if provinsi != "Semua":
+if pilihan_provinsi != "Semua":
     filtered = filtered[
-        filtered["Provinsi"] == provinsi
+        filtered["Provinsi"] == pilihan_provinsi
     ]
 
-if pendidikan != "Semua":
+if pilihan_pendidikan != "Semua":
     filtered = filtered[
-        filtered["Pendidikan"] == pendidikan
+        filtered["Pendidikan"] == pilihan_pendidikan
     ]
 
-# =====================
+# ==========================
 # KPI
-# =====================
-total_sekolah = int(filtered["Total_Sekolah"].sum())
-total_internet = int(filtered["Total_Internet"].sum())
-belum_internet = int(filtered["Diff_Total"].sum())
+# ==========================
+total_sekolah = filtered["Total_Sekolah"].sum()
+total_internet = filtered["Total_Internet"].sum()
+belum_internet = filtered["Diff_Total"].sum()
 
-persen = (
-    total_internet /
-    total_sekolah * 100
-    if total_sekolah > 0 else 0
-)
+persentase = 0
 
-c1, c2, c3, c4 = st.columns(4)
+if total_sekolah > 0:
+    persentase = (
+        total_internet /
+        total_sekolah
+    ) * 100
 
-c1.metric(
+k1, k2, k3, k4 = st.columns(4)
+
+k1.metric(
     "🏫 Total Sekolah",
-    f"{total_sekolah:,}"
+    f"{int(total_sekolah):,}"
 )
 
-c2.metric(
-    "🌐 Terkoneksi",
-    f"{total_internet:,}"
+k2.metric(
+    "🌐 Terhubung Internet",
+    f"{int(total_internet):,}"
 )
 
-c3.metric(
-    "❌ Belum Terkoneksi",
-    f"{belum_internet:,}"
+k3.metric(
+    "❌ Belum Terhubung",
+    f"{int(belum_internet):,}"
 )
 
-c4.metric(
+k4.metric(
     "📊 Persentase",
-    f"{persen:.2f}%"
+    f"{persentase:.2f}%"
 )
 
-st.progress(min(int(persen),100))
+st.progress(min(int(persentase), 100))
 
 st.markdown("---")
 
-# =====================
-# TOP PROVINSI
-# =====================
-left,right = st.columns(2)
+# ==========================
+# GRAFIK
+# ==========================
+st.subheader("🏆 Top 10 Provinsi")
 
-with left:
-
-    st.subheader(
-        "🏆 Top 10 Provinsi"
-    )
-
-    top = (
-        filtered
-        .groupby("Provinsi")
-        ["Total_Internet"]
-        .sum()
-        .sort_values(
-            ascending=False
-        )
-        .head(10)
-    )
-
-    st.bar_chart(top)
-
-with right:
-
-    st.subheader(
-        "📚 Distribusi Jenjang"
-    )
-
-    pendidikan_data = (
-        filtered
-        .groupby("Pendidikan")
-        ["Total_Internet"]
-        .sum()
-    )
-
-    st.bar_chart(
-        pendidikan_data
-    )
-
-# =====================
-# RANKING
-# =====================
-st.subheader(
-    "🏅 Ranking Provinsi"
+grafik = (
+    filtered.groupby("Provinsi")["Total_Internet"]
+    .sum()
+    .sort_values(ascending=False)
+    .head(10)
 )
 
+st.bar_chart(grafik)
+
+# ==========================
+# JENJANG PENDIDIKAN
+# ==========================
+st.subheader("📚 Akses Internet Berdasarkan Jenjang")
+
+jenjang = (
+    filtered.groupby("Pendidikan")["Total_Internet"]
+    .sum()
+)
+
+st.bar_chart(jenjang)
+
+# ==========================
+# RANKING
+# ==========================
+st.subheader("🥇 Ranking Provinsi")
+
 ranking = (
-    filtered
-    .groupby("Provinsi")
+    filtered.groupby("Provinsi")
     .agg({
-        "Total_Internet":"sum",
-        "Total_Sekolah":"sum"
+        "Total_Internet": "sum",
+        "Total_Sekolah": "sum"
     })
-    .reset_index()
 )
 
 ranking["Persentase"] = (
-    ranking["Total_Internet"]
-    /
-    ranking["Total_Sekolah"]
-    *100
+    ranking["Total_Internet"] /
+    ranking["Total_Sekolah"] * 100
 )
 
 ranking = ranking.sort_values(
@@ -173,20 +175,18 @@ st.dataframe(
     use_container_width=True
 )
 
-# =====================
-# DETAIL DATA
-# =====================
-with st.expander(
-    "📋 Lihat Data Lengkap"
-):
+# ==========================
+# DATA LENGKAP
+# ==========================
+with st.expander("📋 Lihat Data Lengkap"):
     st.dataframe(
         filtered,
         use_container_width=True
     )
 
-# =====================
+# ==========================
 # DOWNLOAD
-# =====================
+# ==========================
 csv = filtered.to_csv(
     index=False
 ).encode("utf-8")
@@ -196,13 +196,4 @@ st.download_button(
     csv,
     "akses_internet_sekolah.csv",
     "text/csv"
-)
-
-# =====================
-# FOOTER
-# =====================
-st.markdown("---")
-
-st.caption(
-    "Dashboard dibuat menggunakan Streamlit | Data Akses Internet Sekolah Indonesia 2024"
 )
