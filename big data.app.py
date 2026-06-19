@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # =====================================
-# KONFIGURASI HALAMAN
+# PAGE CONFIG
 # =====================================
 st.set_page_config(
     page_title="Dashboard Akses Internet Sekolah",
@@ -11,62 +11,26 @@ st.set_page_config(
 )
 
 # =====================================
-# CUSTOM CSS PREMIUM
+# CUSTOM CSS
 # =====================================
-st.markdown("""
 st.markdown("""
 <style>
 
-.stApp{
-background:
-radial-gradient(circle at top left,#2563eb22,transparent 30%),
-radial-gradient(circle at top right,#06b6d422,transparent 30%),
-linear-gradient(135deg,#020617,#0f172a,#111827);
+.stApp {
+    background-color: #0f172a;
 }
 
-/* KPI */
-div[data-testid="metric-container"]{
-background:rgba(255,255,255,0.05);
-backdrop-filter:blur(15px);
-border:1px solid rgba(255,255,255,0.08);
-padding:20px;
-border-radius:20px;
-box-shadow:0 8px 30px rgba(0,0,0,.4);
+div[data-testid="metric-container"] {
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    padding: 15px;
+    border-radius: 15px;
 }
 
-/* Hover KPI */
-div[data-testid="metric-container"]:hover{
-transform:translateY(-3px);
-transition:.3s;
-}
-
-/* Table */
-[data-testid="stDataFrame"]{
-border-radius:20px;
-overflow:hidden;
-}
-
-/* Download Button */
-.stDownloadButton button{
-width:100%;
-height:55px;
-border-radius:15px;
-font-weight:bold;
-}
-
-/* Selectbox */
-.stSelectbox div[data-baseweb="select"]{
-background:rgba(255,255,255,0.05);
-border-radius:12px;
-}
-
-/* Progress */
-.stProgress > div > div > div{
-background:linear-gradient(
-90deg,
-#06b6d4,
-#2563eb
-);
+.stDownloadButton button {
+    width: 100%;
+    height: 50px;
+    border-radius: 12px;
 }
 
 </style>
@@ -80,13 +44,13 @@ url = f"https://drive.google.com/uc?id={file_id}"
 
 df = pd.read_csv(url)
 
-df.columns = df.columns.astype(str).str.strip()
+df.columns = df.columns.str.strip()
 
 for col in df.columns:
     if df[col].dtype == "object":
         df[col] = df[col].astype(str).str.strip()
 
-angka = [
+kolom_angka = [
     "Negeri_Internet",
     "Swasta_Internet",
     "Total_Internet",
@@ -98,7 +62,7 @@ angka = [
     "Diff_Total"
 ]
 
-for col in angka:
+for col in kolom_angka:
     if col in df.columns:
         df[col] = pd.to_numeric(
             df[col],
@@ -106,74 +70,50 @@ for col in angka:
         ).fillna(0)
 
 # =====================================
-# HEADER PREMIUM
+# HEADER
 # =====================================
 st.markdown("""
 <div style="
-background: linear-gradient(
-90deg,
-#2563eb,
-#06b6d4,
-#14b8a6
-);
-padding:35px;
-border-radius:25px;
+background:linear-gradient(90deg,#2563eb,#06b6d4);
+padding:30px;
+border-radius:20px;
 text-align:center;
 color:white;
-margin-bottom:20px;
-box-shadow:0px 10px 30px rgba(0,0,0,0.4);
 ">
-
 <h1>🌐 Indonesia School Internet Dashboard</h1>
-
-<p style="font-size:18px;">
-Monitoring Akses Internet Sekolah Indonesia Tahun 2024
-</p>
-
+<p>Monitoring Akses Internet Sekolah Indonesia Tahun 2024</p>
 </div>
 """, unsafe_allow_html=True)
 
-st.info(
-    "📊 Dashboard interaktif untuk analisis akses internet sekolah berdasarkan provinsi dan jenjang pendidikan."
-)
+st.write("")
 
 # =====================================
 # FILTER
 # =====================================
-col1, col2 = st.columns(2)
+c1, c2 = st.columns(2)
 
-with col1:
-    pilihan_provinsi = st.selectbox(
+with c1:
+    provinsi = st.selectbox(
         "📍 Pilih Provinsi",
-        ["Semua"] + sorted(
-            df["Provinsi"]
-            .dropna()
-            .unique()
-            .tolist()
-        )
+        ["Semua"] + sorted(df["Provinsi"].dropna().unique())
     )
 
-with col2:
-    pilihan_pendidikan = st.selectbox(
+with c2:
+    pendidikan = st.selectbox(
         "🎓 Pilih Jenjang",
-        ["Semua"] + sorted(
-            df["Pendidikan"]
-            .dropna()
-            .unique()
-            .tolist()
-        )
+        ["Semua"] + sorted(df["Pendidikan"].dropna().unique())
     )
 
 filtered = df.copy()
 
-if pilihan_provinsi != "Semua":
+if provinsi != "Semua":
     filtered = filtered[
-        filtered["Provinsi"] == pilihan_provinsi
+        filtered["Provinsi"] == provinsi
     ]
 
-if pilihan_pendidikan != "Semua":
+if pendidikan != "Semua":
     filtered = filtered[
-        filtered["Pendidikan"] == pilihan_pendidikan
+        filtered["Pendidikan"] == pendidikan
     ]
 
 # =====================================
@@ -193,94 +133,39 @@ if total_sekolah > 0:
 
 k1, k2, k3, k4 = st.columns(4)
 
-k1.metric(
-    "🏫 Total Sekolah",
-    f"{int(total_sekolah):,}"
-)
+with k1:
+    st.metric(
+        "🏫 Total Sekolah",
+        f"{int(total_sekolah):,}"
+    )
 
-k2.metric(
-    "🌐 Terhubung Internet",
-    f"{int(total_internet):,}"
-)
+with k2:
+    st.metric(
+        "🌐 Terhubung",
+        f"{int(total_internet):,}"
+    )
 
-k3.metric(
-    "❌ Belum Terhubung",
-    f"{int(belum_internet):,}"
-)
+with k3:
+    st.metric(
+        "❌ Belum Terhubung",
+        f"{int(belum_internet):,}"
+    )
 
-k4.metric(
-    "📈 Persentase",
-    f"{persentase:.2f}%"
-)
+with k4:
+    st.metric(
+        "📊 Persentase",
+        f"{persentase:.2f}%"
+    )
 
 st.progress(
-    min(
-        int(persentase),
-        100
-    )
+    min(int(persentase), 100)
 )
 
-st.markdown("---")
+st.divider()
 
 # =====================================
-# GRAFIK
+# TOP 5 PROVINSI
 # =====================================
-top5 = ranking.head(5)
-
-st.subheader("🏆 Top 5 Provinsi Terbaik")
-
-for i,(prov,row) in enumerate(top5.iterrows(),1):
-
-    medal = "🏅"
-
-    if i == 1:
-        medal = "🥇"
-    elif i == 2:
-        medal = "🥈"
-    elif i == 3:
-        medal = "🥉"
-
-    st.markdown(
-        f"{medal} **{prov}** — {row['Persentase']:.2f}%"
-)
-    st.subheader(
-        "🏆 Top 10 Provinsi"
-    )
-
-    grafik = (
-        filtered
-        .groupby("Provinsi")
-        ["Total_Internet"]
-        .sum()
-        .sort_values(
-            ascending=False
-        )
-        .head(10)
-    )
-
-    st.bar_chart(grafik)
-
-with g2:
-    st.subheader(
-        "📚 Distribusi Jenjang"
-    )
-
-    jenjang = (
-        filtered
-        .groupby("Pendidikan")
-        ["Total_Internet"]
-        .sum()
-    )
-
-    st.bar_chart(jenjang)
-
-# =====================================
-# RANKING
-# =====================================
-st.subheader(
-    "🥇 Ranking Provinsi"
-)
-
 ranking = (
     filtered
     .groupby("Provinsi")
@@ -302,6 +187,65 @@ ranking = ranking.sort_values(
     ascending=False
 )
 
+st.subheader("🏆 Top 5 Provinsi")
+
+top5 = ranking.head(5)
+
+for i, (prov, row) in enumerate(top5.iterrows(), start=1):
+
+    medal = "🏅"
+
+    if i == 1:
+        medal = "🥇"
+    elif i == 2:
+        medal = "🥈"
+    elif i == 3:
+        medal = "🥉"
+
+    st.write(
+        f"{medal} {prov} — {row['Persentase']:.2f}%"
+    )
+
+st.divider()
+
+# =====================================
+# GRAFIK
+# =====================================
+g1, g2 = st.columns(2)
+
+with g1:
+
+    st.subheader("🏆 Top 10 Provinsi")
+
+    top_prov = (
+        filtered
+        .groupby("Provinsi")
+        ["Total_Internet"]
+        .sum()
+        .sort_values(ascending=False)
+        .head(10)
+    )
+
+    st.bar_chart(top_prov)
+
+with g2:
+
+    st.subheader("📚 Distribusi Jenjang")
+
+    jenjang = (
+        filtered
+        .groupby("Pendidikan")
+        ["Total_Internet"]
+        .sum()
+    )
+
+    st.bar_chart(jenjang)
+
+# =====================================
+# RANKING
+# =====================================
+st.subheader("🥇 Ranking Provinsi")
+
 st.dataframe(
     ranking,
     use_container_width=True
@@ -310,9 +254,8 @@ st.dataframe(
 # =====================================
 # DATA LENGKAP
 # =====================================
-with st.expander(
-    "📋 Lihat Data Lengkap"
-):
+with st.expander("📋 Data Lengkap"):
+
     st.dataframe(
         filtered,
         use_container_width=True
@@ -326,7 +269,7 @@ csv = filtered.to_csv(
 ).encode("utf-8")
 
 st.download_button(
-    "📥 Download Data",
+    "📥 Download Data CSV",
     csv,
     "akses_internet_sekolah.csv",
     "text/csv"
@@ -335,8 +278,11 @@ st.download_button(
 # =====================================
 # FOOTER
 # =====================================
-st.markdown("---")
+st.divider()
 
-st.caption(
-    "Dashboard Akses Internet Sekolah Indonesia 2024 | Powered by Streamlit"
-)
+st.markdown("""
+<center>
+<h4>🌐 Dashboard Akses Internet Sekolah Indonesia 2024</h4>
+<p>Powered by Streamlit & Pandas</p>
+</center>
+""", unsafe_allow_html=True)
