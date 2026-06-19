@@ -14,46 +14,59 @@ st.set_page_config(
 # CUSTOM CSS PREMIUM
 # =====================================
 st.markdown("""
+st.markdown("""
 <style>
 
-/* Background */
-.stApp {
-    background: linear-gradient(
-        135deg,
-        #0f172a 0%,
-        #111827 50%,
-        #1e293b 100%
-    );
+.stApp{
+background:
+radial-gradient(circle at top left,#2563eb22,transparent 30%),
+radial-gradient(circle at top right,#06b6d422,transparent 30%),
+linear-gradient(135deg,#020617,#0f172a,#111827);
 }
 
-/* KPI Card */
-div[data-testid="metric-container"] {
-    background: linear-gradient(
-        135deg,
-        rgba(37,99,235,0.25),
-        rgba(6,182,212,0.20)
-    );
-    border: 1px solid rgba(255,255,255,0.15);
-    padding: 20px;
-    border-radius: 20px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+/* KPI */
+div[data-testid="metric-container"]{
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(15px);
+border:1px solid rgba(255,255,255,0.08);
+padding:20px;
+border-radius:20px;
+box-shadow:0 8px 30px rgba(0,0,0,.4);
 }
 
-/* Tombol Download */
-.stDownloadButton button {
-    width: 100%;
-    border-radius: 15px;
-    height: 50px;
-    font-weight: bold;
+/* Hover KPI */
+div[data-testid="metric-container"]:hover{
+transform:translateY(-3px);
+transition:.3s;
+}
+
+/* Table */
+[data-testid="stDataFrame"]{
+border-radius:20px;
+overflow:hidden;
+}
+
+/* Download Button */
+.stDownloadButton button{
+width:100%;
+height:55px;
+border-radius:15px;
+font-weight:bold;
+}
+
+/* Selectbox */
+.stSelectbox div[data-baseweb="select"]{
+background:rgba(255,255,255,0.05);
+border-radius:12px;
 }
 
 /* Progress */
-.stProgress > div > div > div {
-    background: linear-gradient(
-        90deg,
-        #06b6d4,
-        #3b82f6
-    );
+.stProgress > div > div > div{
+background:linear-gradient(
+90deg,
+#06b6d4,
+#2563eb
+);
 }
 
 </style>
@@ -212,9 +225,24 @@ st.markdown("---")
 # =====================================
 # GRAFIK
 # =====================================
-g1, g2 = st.columns(2)
+top5 = ranking.head(5)
 
-with g1:
+st.subheader("🏆 Top 5 Provinsi Terbaik")
+
+for i,(prov,row) in enumerate(top5.iterrows(),1):
+
+    medal = "🏅"
+
+    if i == 1:
+        medal = "🥇"
+    elif i == 2:
+        medal = "🥈"
+    elif i == 3:
+        medal = "🥉"
+
+    st.markdown(
+        f"{medal} **{prov}** — {row['Persentase']:.2f}%"
+)
     st.subheader(
         "🏆 Top 10 Provinsi"
     )
